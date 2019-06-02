@@ -4,13 +4,21 @@
 #
 # PRIVATE CLASS - do not use directly (use main `zookeeper` class).
 class zookeeper::install::archive inherits zookeeper::install {
-  $filename = "${module_name}-${::zookeeper::archive_version}"
+  $filename = "${module_name}-${archive_version}"
+
+  # Apache updated the filename base for archive files in release 3.5.5
+  if versioncmp($archive_version, '3.5.5') <= 0 {
+    $dl_filename = "apache-${filename}"
+  } else {
+    $dl_filename = $filename
+  }
+  
   $download_url = $::zookeeper::archive_dl_url ? {
-    undef   => "${::zookeeper::archive_dl_site}/${module_name}-${::zookeeper::archive_version}/${filename}.tar.gz",
+    undef   => "${::zookeeper::archive_dl_site}/${module_name}-${::zookeeper::archive_version}/${dl_filename}.tar.gz",
     default => $::zookeeper::archive_dl_url,
   }
 
-  archive { "${::zookeeper::archive_install_dir}/${filename}.tar.gz":
+  archive { "${::zookeeper::archive_install_dir}/${dl_filename}.tar.gz":
     ensure        => present,
     user          => 'root',
     group         => 'root',
@@ -27,7 +35,7 @@ class zookeeper::install::archive inherits zookeeper::install {
     notify        => Exec['chown_zookeeper_directory'],
   }
 
-  $symlink_require = Archive["${::zookeeper::archive_install_dir}/${filename}.tar.gz"]
+  $symlink_require = Archive["${::zookeeper::archive_install_dir}/${dl_filename}.tar.gz"]
 
   exec { 'chown_zookeeper_directory':
     command     => "chown -R ${::zookeeper::user}:${::zookeeper::group} ${::zookeeper::archive_install_dir}/${filename}",
