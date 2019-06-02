@@ -5,7 +5,11 @@ class zookeeper::service inherits zookeeper {
 
   case $::zookeeper::install_method {
     'archive': {
-      $_zoo_dir = "${::zookeeper::archive_install_dir}/${module_name}"
+      if versioncmp($::zookeeper::archive_version, '3.5.5') >= 0 {
+        $_zoo_dir = "${::zookeeper::archive_install_dir}/apache-${module_name}-${::zookeeper::archive_version}"
+      } else {
+        $_zoo_dir = "${::zookeeper::archive_install_dir}/${module_name}-${::zookeeper::archive_version}"
+      }
     }
     'package': {
       $_zoo_dir = $::zookeeper::zoo_dir
